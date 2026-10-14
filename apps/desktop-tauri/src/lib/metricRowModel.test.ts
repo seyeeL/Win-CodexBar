@@ -73,24 +73,24 @@ function resetIn(ms: number, relative = true) {
 
 describe("metricResetText", () => {
   it.each([
-    [2 * HOUR, "Resets in 2h"],
-    [HOUR + 59 * MINUTE + 30_000, "Resets in 2h"],
-    [2 * HOUR + 5 * MINUTE, "Resets in 2h 5m"],
-    [DAY + 3 * HOUR, "Resets in 1d 3h"],
-    [DAY + 5 * MINUTE, "Resets in 1d 5m"],
-    [2 * DAY, "Resets in 2d"],
-    [45_000, "Resets in 1m"],
+    [2 * HOUR, "Resets in 2h · 2026-10-10 17:40"],
+    [HOUR + 59 * MINUTE + 30_000, "Resets in 2h · 2026-10-10 17:39"],
+    [2 * HOUR + 5 * MINUTE, "Resets in 2h 5m · 2026-10-10 17:45"],
+    [DAY + 3 * HOUR, "Resets in 1d 3h · 2026-10-11 18:40"],
+    [DAY + 5 * MINUTE, "Resets in 1d 5m · 2026-10-11 15:45"],
+    [2 * DAY, "Resets in 2d · 2026-10-12 15:40"],
+    [45_000, "Resets in 1m · 2026-10-10 15:40"],
     [500, "Resets now"],
     [-MINUTE, "Resets now"],
-  ])("counts %d ms down to %j with ceiling minutes", (ms, expected) => {
+  ])("counts %d ms down to %j with ceiling minutes and the absolute time", (ms, expected) => {
     expect(resetIn(ms)).toBe(expected);
   });
 
   it.each([
-    [new Date(2026, 9, 10, 18, 5), "Resets 6:05 PM"],
-    [new Date(2026, 9, 11, 9, 24), "Resets tomorrow, 9:24 AM"],
-    [new Date(2026, 9, 14, 9, 24), "Resets Oct 14, 9:24 AM"],
-  ])("formats the absolute reset %s as today, tomorrow or a date", (date, expected) => {
+    [new Date(2026, 9, 10, 18, 5), "Resets 2026-10-10 18:05"],
+    [new Date(2026, 9, 11, 9, 24), "Resets 2026-10-11 09:24"],
+    [new Date(2026, 9, 14, 9, 24), "Resets 2026-10-14 09:24"],
+  ])("formats the absolute reset %s as YYYY-MM-DD HH:mm", (date, expected) => {
     expect(resetIn(date.getTime() - NOW, false)).toBe(expected);
   });
 

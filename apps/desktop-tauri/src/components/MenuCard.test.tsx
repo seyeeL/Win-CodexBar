@@ -356,7 +356,7 @@ describe("MenuCard", () => {
 
     const description = await screen.findByText("750 / 1000 credits left");
     expect(description).toHaveClass("menu-metric__detail");
-    expect(screen.getByText("Resets in 1h")).toHaveClass("menu-metric__reset");
+    expect(screen.getByText(/^Resets in 1h · \d{4}-\d{2}-\d{2} \d{2}:\d{2}$/)).toHaveClass("menu-metric__reset");
   });
 
   it("does not repeat a reset-phrase description as an extra detail", async () => {
@@ -367,7 +367,7 @@ describe("MenuCard", () => {
 
     renderCard(snapshot);
 
-    expect(await screen.findByText("Resets in 5h")).toHaveClass("menu-metric__reset");
+    expect(await screen.findByText(/^Resets in 5h · \d{4}-\d{2}-\d{2} \d{2}:\d{2}$/)).toHaveClass("menu-metric__reset");
     expect(document.querySelectorAll(".menu-metric__reset")).toHaveLength(1);
     expect(document.querySelectorAll(".menu-metric__detail")).toHaveLength(0);
     expect(screen.queryByText("Resets in 3h")).not.toBeInTheDocument();
@@ -390,7 +390,7 @@ describe("MenuCard", () => {
 
     renderCard(snapshot, { showResetWhenExhausted: true });
 
-    expect(await screen.findByText("Resets in 1h")).toHaveClass("menu-metric__reset");
+    expect(await screen.findByText(/^Resets in 1h · \d{4}-\d{2}-\d{2} \d{2}:\d{2}$/)).toHaveClass("menu-metric__reset");
     expect(document.querySelector(".menu-metric__percent")).toBeNull();
     expect(screen.queryByText("0% left")).not.toBeInTheDocument();
   });
@@ -1162,7 +1162,7 @@ describe("MenuCard", () => {
     const head = container.querySelector(".menu-metric__head");
     expect(Array.from(head?.children ?? [], (node) => node.textContent)).toEqual([
       "ProviderSessionLabel 63% left",
-      "Resets in 1h 30m",
+      expect.stringMatching(/^Resets in 1h 30m · \d{4}-\d{2}-\d{2} \d{2}:\d{2}$/),
     ]);
   });
 

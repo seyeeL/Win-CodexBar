@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { LocaleKey } from "../i18n/keys";
 import { localizeDates, localizeResetCountdown } from "../lib/providerText";
+import { formatResetDateTime, withResetDateTime } from "../lib/resetDateTime";
 import { useLocale } from "./useLocale";
 
 export type ResetTimeFormatMode = "reset" | "expires";
@@ -45,21 +46,15 @@ export function normalizeResetDescription(
   return fill(t("ResetsAtLabel"), localizeDates(body, t));
 }
 
-const absoluteResetFormatter = new Intl.DateTimeFormat(undefined, {
-  month: "short",
-  day: "numeric",
-  hour: "numeric",
-  minute: "2-digit",
-});
-
 /**
  * Format a provider's reset timestamp for display.
  *
- * When `relative` is true, returns a live countdown string. `mode` selects
- * reset wording ("Resets in …") vs expiry wording ("Next expires in …").
+ * When `relative` is true, returns a live countdown followed by the absolute
+ * local time ("Resets in 2h 5m · 2026-10-14 10:00"). `mode` selects reset
+ * wording ("Resets in …") vs expiry wording ("Next expires in …").
  *
- * When `relative` is false, returns the absolute reset time converted to
- * the user's local timezone via `Intl.DateTimeFormat`.
+ * When `relative` is false, returns only the absolute local reset time
+ * (`2026-10-14 10:00`).
  *
  * Falls back to `fallback` (typically the backend's `resetDescription`) when
  * `resetsAt` is absent or unparseable.
@@ -100,23 +95,21 @@ export function useFormattedResetTime(
     const minutes = totalMinutes % 60;
     if (days > 0) {
       const key = mode === "expires" ? "NextExpiresInDaysHours" : "ResetsInDaysHours";
-      return t(key)
-        .replace("{}", String(days))
-        .replace("{}", String(hours));
+      return withResetDateTime(
+        t(key).replace("{}", String(days)).replace("{}", String(hours)),
+        target,
+      );
     }
     if (hours === 0) {
       const key = mode === "expires" ? "NextExpiresInMinutes" : "ResetsInMinutes";
-      return t(key).replace("{}", String(minutes));
+      return withResetDateTime(t(key).replace("{}", String(minutes)), target);
     }
     const key = mode === "expires" ? "NextExpiresInHoursMinutes" : "ResetsInHoursMinutes";
-    return t(key)
-      .replace("{}", String(hours))
-      .replace("{}", String(minutes));
+    return withResetDateTime(
+      t(key).replace("{}", String(hours)).replace("{}", String(minutes)),
+      target,
+    );
   }
 
-  try {
-    return absoluteResetFormatter.format(new Date(target));
-  } catch {
-    return normalizedFallback;
-  }
+  return formatResetDateTime(new Date(target));
 }

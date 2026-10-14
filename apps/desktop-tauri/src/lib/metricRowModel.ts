@@ -7,6 +7,7 @@ import type {
   WorkdayTickStyle,
 } from "../types/bridge";
 import { type QuotaWarningSettings, resolveQuotaWarning } from "./quotaWarnings";
+import { formatResetDateTime, withResetDateTime } from "./resetDateTime";
 import { resetDescriptionFallback } from "./usageWindows";
 
 type Translate = (key: LocaleKey) => string;
@@ -156,31 +157,6 @@ function formatCountdown(seconds: number, keys: CountdownKeys, t: Translate): st
   return fill(t(keys.minutes), minutes);
 }
 
-function intlLocale(t: Translate): string | undefined {
-  const locale = t("IntlLocale");
-  return /^[a-z]{2}-[A-Z]{2}$/.test(locale) ? locale : undefined;
-}
-
-function sameLocalDay(a: Date, b: Date): boolean {
-  return (
-    a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
-  );
-}
-
-function absoluteResetDescription(target: Date, now: Date, t: Translate): string {
-  const locale = intlLocale(t);
-  const time = new Intl.DateTimeFormat(locale, { hour: "numeric", minute: "2-digit" });
-  if (sameLocalDay(target, now)) return time.format(target);
-  const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
-  if (sameLocalDay(target, tomorrow)) return fill(t("ResetTomorrowAt"), time.format(target));
-  return new Intl.DateTimeFormat(locale, {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(target);
-}
-
 /**
  * Upstream `UsageFormatter.resetCountdownDescription`: the unlocalized "in 2d 3h"
  * countdown that `syntheticRegenDetail` puts inside "Regenerates %@", always relative.
@@ -212,9 +188,10 @@ export function metricResetText(
     return fill(t("RegeneratesCountdown"), regenCountdown((target - now) / 1000));
   }
   if (!relative) {
-    return fill(t("ResetsAtLabel"), absoluteResetDescription(new Date(target), new Date(now), t));
+    return fill(t("ResetsAtLabel"), formatResetDateTime(new Date(target)));
   }
-  return formatCountdown((target - now) / 1000, RESET_KEYS, t) ?? t("ProviderTextResetsNow");
+  const countdown = formatCountdown((target - now) / 1000, RESET_KEYS, t);
+  return countdown ? withResetDateTime(countdown, target) : t("ProviderTextResetsNow");
 }
 
 function paceKind(lane: MetricLane, windowMinutes: number | null, resetWindow: boolean): PaceKind | null {

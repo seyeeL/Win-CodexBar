@@ -1,5 +1,6 @@
 import { act, render, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { withResetDateTime } from "../lib/resetDateTime";
 
 const tauriMocks = vi.hoisted(() => ({
   getCachedProviders: vi.fn(),
@@ -456,7 +457,7 @@ describe("FloatBar", () => {
     const { container } = renderFloatBar(bootstrap());
     await waitFor(() => {
       expect(container.querySelector(".floatbar__pill")?.getAttribute("title")).toMatch(
-        /^Codex: —\nResets in 2h \d+m$/,
+        /^Codex: —\nResets in 2h \d+m · \d{4}-\d{2}-\d{2} \d{2}:\d{2}$/,
       );
     });
     expect(container.querySelector(".floatbar__pct")?.textContent).toBe("—");
@@ -956,7 +957,10 @@ describe("FloatBar", () => {
     const now = Date.parse("2024-06-01T00:00:00Z");
     const nowSpy = vi.spyOn(Date, "now").mockReturnValue(now);
     try {
-      const fullResetText = "4 小时 59 分钟后重置";
+      const fullResetText = withResetDateTime(
+        "4 小时 59 分钟后重置",
+        Date.parse("2024-06-01T04:59:00Z"),
+      );
       tauriMocks.getLocaleStrings.mockResolvedValue(
         buildBundle(
           {
@@ -1069,7 +1073,10 @@ describe("FloatBar", () => {
     const now = Date.parse("2024-06-01T00:00:00Z");
     const nowSpy = vi.spyOn(Date, "now").mockReturnValue(now);
     try {
-      const fullResetText = "1 天 2 小时后重置";
+      const fullResetText = withResetDateTime(
+        "1 天 2 小时后重置",
+        Date.parse("2024-06-02T02:07:00Z"),
+      );
       tauriMocks.getLocaleStrings.mockResolvedValue(
         buildBundle(
           {
